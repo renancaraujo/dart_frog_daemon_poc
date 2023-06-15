@@ -66,6 +66,10 @@ class _DaemonClientInheritedWidget extends InheritedWidget {
 class DartFrogDaemonClient {
   Process? process;
 
+  int _counter = 0;
+
+  String get _requestId => '${_counter++}';
+
   static DartFrogDaemonClient of(BuildContext context) {
     final result = context
         .dependOnInheritedWidgetOfExactType<_DaemonClientInheritedWidget>();
@@ -94,7 +98,7 @@ class DartFrogDaemonClient {
     _inputStreamController.stream.listen((message) {
       try {
         final json = jsonEncode(message.toJson());
-        print('in: ${json}');
+        print('in: [${json}]');
 
         process.stdin.add(utf8.encode('[${json}]\n'));
       } catch (e) {
@@ -117,8 +121,11 @@ class DartFrogDaemonClient {
       .where((event) => event is DaemonEvent)
       .cast<DaemonEvent>();
 
-  Future<DaemonResponse> sendRequest(DaemonRequest request) {
+  Future<DaemonResponse> sendRequest(
+    DaemonRequest Function(String id) requestBuilder,
+  ) {
     final completer = Completer<DaemonResponse>();
+    final request = requestBuilder(_requestId);
     final callId = request.id;
     _inputStreamController.add(request);
     responses

@@ -1,4 +1,3 @@
-import 'package:dfdaemonclient/l10n/l10n.dart';
 import 'package:dfdaemonclient/route_list/route_list.dart';
 import 'package:dfdaemonclient/server_starter/server_starter.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +10,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: const ColorScheme.dark(
@@ -18,24 +18,22 @@ class App extends StatelessWidget {
           secondary: Colors.orange,
         ),
       ),
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
       home: const Scaffold(
         body: DaemonClientProvider(
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
+            child: Row(
               children: [
                 Flexible(
                   child: Padding(
-                    padding: EdgeInsets.symmetric( vertical: 8),
+                    padding: EdgeInsets.symmetric( horizontal: 8),
                     child: RouteList(),
                   ),
                 ),
                 Flexible(
                   flex: 2,
                   child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
+                    padding: EdgeInsets.symmetric(horizontal: 8),
                     child: ServerStarter(),
                   ),
                 ),

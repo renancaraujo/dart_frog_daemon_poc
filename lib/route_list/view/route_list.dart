@@ -24,18 +24,21 @@ class _RouteListState extends State<RouteList> {
 
     final client = DartFrogDaemonClient.of(context);
 
-    response = Future.delayed(Duration(seconds: 1), () {
-      return client.sendRequest(
-        DaemonRequest(
-          id: '${counter++}',
-          method: 'routeConfig.monitorStart',
-          params: {
-            'workingDirectory':
-                '/Users/renanaraujo/devhome/vgv/dart_frog/examples/todos',
-          },
-        ),
-      );
-    });
+    response = Future.delayed(
+      Duration(seconds: 1),
+      () {
+        return client.sendRequest(
+          (id) => DaemonRequest(
+            id: id,
+            method: 'routeConfig.monitorStart',
+            params: {
+              'workingDirectory':
+                  '/Users/renanaraujo/devhome/vgv/dart_frog/examples/todos',
+            },
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -101,8 +104,8 @@ class _RouteListInnerState extends State<RouteListInner> {
     super.didChangeDependencies();
 
     DartFrogDaemonClient.of(context).sendRequest(
-      DaemonRequest(
-        id: '60',
+      (id) => DaemonRequest(
+        id: id,
         method: 'routeConfig.monitorRegenerateRouteConfig',
         params: {
           'monitorId': widget.analyzerId,
@@ -117,14 +120,15 @@ class _RouteListInnerState extends State<RouteListInner> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text('Routes', style: Theme.of(context).textTheme.headlineLarge),
+        AddStuffBar(),
         Flexible(
           child: StreamBuilder(
             stream: analyzeEvents,
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 final event = snapshot.data as DaemonEvent;
-                final routeConfigRaw = event.params['routeConfiguration']
-                    as Map<String, dynamic>;
+                final routeConfigRaw =
+                    event.params['routeConfiguration'] as Map<String, dynamic>;
 
                 final endpoints =
                     routeConfigRaw['endpoints'] as Map<String, dynamic>;
@@ -154,6 +158,94 @@ class _RouteListInnerState extends State<RouteListInner> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class AddStuffBar extends StatefulWidget {
+  const AddStuffBar({
+    super.key,
+  });
+
+  @override
+  State<AddStuffBar> createState() => _AddStuffBarState();
+}
+
+class _AddStuffBarState extends State<AddStuffBar> {
+  void handleAddRoute() async {
+
+    final routePath = await showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Enter new route path'),
+          content: TextField(
+            keyboardType: TextInputType.number,
+            onSubmitted: (value) {
+              Navigator.of(context).pop(value);
+            },
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+            ),
+          ),
+        );
+      },
+    );
+
+    if(routePath == null || routePath.isEmpty) {
+      return;
+    }
+
+    DartFrogDaemonClient.of(context).sendRequest((id) {
+      return DaemonRequest(
+        id: id,
+        method: 'routeConfig.newRoute',
+        params: {
+          'routePath': routePath,
+          'workingDirectory':
+              '/Users/renanaraujo/devhome/vgv/dart_frog/examples/todos',
+        },
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButtonTheme(
+      data: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border.symmetric(
+              horizontal: BorderSide(
+                color: Colors.grey.shade700,
+              ),
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            children: [
+              TextButton(
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.orange.shade50.withAlpha(65),
+                ),
+                onPressed: handleAddRoute,
+                child: const Text('Add route'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
